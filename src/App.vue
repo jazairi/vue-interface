@@ -16,16 +16,22 @@ export default {
   data: function () {
     return {
       title: 'Appointment List',
-      appointments: []
+      appointments: [],
+      aptIndex: 0
     };
   },
   components: {
     AppointmentList
   },
   mounted() {
-    axios
-      .get('./data.json')
-      .then((response) => (this.appointments = response.data));
+    axios.get('./data.json').then(
+      (response) =>
+        (this.appointments = response.data.map((item) => {
+          item.aptId = this.aptIndex;
+          this.aptIndex++;
+          return item;
+        }))
+    );
   },
   methods: {
     removeItem: function (apt) {
