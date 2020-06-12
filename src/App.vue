@@ -2,8 +2,15 @@
   <div id="main-app" class="container">
     <div class="row justify-content-center">
       <add-appointment @add="addItem" />
+      <search-appointments
+        @searchRecords="searchAppointments"
+        :myKey="filterKey"
+        :myDir="filterDir"
+        @requestKey="changeKey"
+        @requestDir="changeDir"
+      />
       <appointment-list
-        :appointments="appointments"
+        :appointments="filteredApts"
         @remove="removeItem"
         @edit="editItem"
       />
@@ -13,6 +20,7 @@
 
 <script>
 import AppointmentList from './components/AppointmentList';
+import SearchAppointments from './components/SearchAppointments';
 import AddAppointment from './components/AddAppointment';
 import _ from 'lodash';
 import axios from 'axios';
@@ -21,13 +29,16 @@ export default {
   name: 'MainApp',
   data: function () {
     return {
-      title: 'Appointment List',
       appointments: [],
+      filterKey: 'petName',
+      filterDir: 'asc',
+      searchTerms: '',
       aptIndex: 0
     };
   },
   components: {
     AppointmentList,
+    SearchAppointments,
     AddAppointment
   },
   mounted() {
@@ -40,7 +51,36 @@ export default {
         }))
     );
   },
+  computed: {
+    searchedApts: function () {
+      return this.appointments.filter((item) => {
+        return (
+          item.petName.toLowerCase().match(this.searchTerms.toLowerCase()) ||
+          item.petOwner.toLowerCase().match(this.searchTerms.toLowerCase()) ||
+          item.aptNotes.toLowerCase().match(this.searchTerms.toLowerCase())
+        );
+      });
+    },
+    filteredApts: function () {
+      return _.orderBy(
+        this.searchedApts,
+        (item) => {
+          return item[this.filterKey].toLowerCase();
+        },
+        this.filterDir
+      );
+    }
+  },
   methods: {
+    changeKey: function (value) {
+      this.filterKey = value;
+    },
+    changeDir: function (value) {
+      this.filterDir = value;
+    },
+    searchAppointments: function (terms) {
+      this.searchTerms = terms;
+    },
     addItem: function (apt) {
       apt.aptId = this.aptIndex;
       this.aptIndex++;
